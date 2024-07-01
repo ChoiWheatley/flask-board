@@ -3,6 +3,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from db import db
 from models import Post
+from schemas import PostSchema
 
 blp = Blueprint(
     "posts", __name__, url_prefix="/posts", description="Operations on posts"
@@ -15,8 +16,8 @@ class Posts(MethodView):
         posts = Post.query.all()
         return [post.to_dict() for post in posts], 200
 
-    def post(self):
-        data = request.get_json()
+    @blp.arguments(PostSchema)
+    def post(self, data: dict):
         new_post = Post(title=data["title"], content=data["content"])
         db.session.add(new_post)
         db.session.commit()
@@ -30,9 +31,9 @@ class PostById(MethodView):
         post = Post.query.get_or_404(post_id)
         return post.to_dict(), 200
 
-    def put(self, post_id):
+    @blp.arguments(PostSchema)
+    def put(self, data: dict, post_id: int):
         post: Post = Post.query.get_or_404(post_id)
-        data: dict = request.get_json()
 
         post.title = data["title"]
         post.content = data["content"]
